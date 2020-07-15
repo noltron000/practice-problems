@@ -5,20 +5,24 @@ class ListNode(object):
 		self.next = None
 
 def remove_k_from_list(node, k):
-	# indicates the end of a list
-	if node is None:
-		return node
-
-	# k has appeared -- remove it
-	elif node.value == k:
-		node = remove_k_from_list(node.next, k)
-		return node
-
-	# this node is fine.
-	else:
-		next_node = remove_k_from_list(node.next, k)
-		node.next = next_node
-		return node
+	# initialize previous node tracker
+	list_head = node
+	node_prev = None
+	# loop through every node, checking each one
+	while node is not None:
+		# k has been found; remove it.
+		if node.value == k:
+			if node_prev == None:
+				list_head = node.next
+			else:
+				node_prev.next = node.next
+		# k isnt found, just continue onwards
+		else:
+			node_prev = node
+		# go to the next node
+		node = node.next
+	# return the head node
+	return list_head
 
 # this is for code signal's wonkey python camel-case
 removeKFromList = remove_k_from_list
