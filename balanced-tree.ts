@@ -1,4 +1,3 @@
-//
 // Binary trees are already defined with this interface:
 class Tree<Type> {
 	// declare property types
