@@ -25,7 +25,6 @@ class Stack {
 }
 
 const nextLarger = (inputArray) => {
-	const outputArray = new Array()
 	const candidates = new Stack()
 	const changes = new Array()
 
@@ -34,7 +33,6 @@ const nextLarger = (inputArray) => {
 	// 	but it also holds data on its output value.
 	inputArray.forEach((inputValue, index) => {
 		changes.push({
-			'index': index,
 			'input': inputValue,
 			'output': undefined,
 		})
