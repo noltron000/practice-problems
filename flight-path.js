@@ -147,10 +147,17 @@ const createAirports = (times, ...extras) => {
 	}, [ ])
 
 	// add the extras.
+	// these extras don't necessarily have any flights.
+	// so, create them if they don't exist yet.
 	extras.forEach((city) => {
+
+		// is there some flight that has this city name?
 		const needsNewAirport = !airports.some((airport) => {
 			return airport.city === city
 		})
+
+		// if not, then we need to create it.
+		// but notice, it doesn't have any flights!
 		if (needsNewAirport) {
 			const airport = new Airport({city})
 			airports.push(airport)
