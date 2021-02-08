@@ -66,7 +66,7 @@ const toTimeString = (numMinutes) => {
 
 
 // create a graph based on given variables.
-const createAirports = (times) => {
+const createAirports = (times, ...extras) => {
 
 	// generating the airports takes two main steps:
 	// 	formatting all of the flights in a list, and then
@@ -146,35 +146,24 @@ const createAirports = (times) => {
 		return airports
 	}, [ ])
 
+	// add the extras.
+	extras.forEach((city) => {
+		const needsNewAirport = !airports.some((airport) => {
+			return airport.city === city
+		})
+		if (needsNewAirport) {
+			const airport = new Airport({city})
+			airports.push(airport)
+		}
+	})
+
 	// airports list is complete after the loop.
 	return airports
 }
 
-/*
-// Djikstra's algorithm.
-function Dijkstra(Graph, source):
-       dist[source]  := 0                     // Distance from source to source is set to 0
-       for each vertex v in Graph:            // Initializations
-           if v ≠ source
-               dist[v]  := infinity           // Unknown distance function from source to each node set to infinity
-           add v to Q                         // All nodes initially in Q
-
-      while Q is not empty:                  // The main loop
-          v := vertex in Q with min dist[v]  // In the first run-through, this vertex is the source node
-          remove v from Q
-
-          for each neighbor u of v:           // where neighbor u has not yet been removed from Q.
-              alt := dist[v] + length(v, u)
-              if alt < dist[u]:               // A shorter path to u has been found
-                  dist[u]  := alt            // Update distance of u
-
-      return dist[ ]
-  end function
- */
 
 // main function entry-point.
 const flightPlan = (times, origin, destination) => {
-
 	// Each airport can be thought of as a single node.
 	//
 	// Each flight connects one airport to another,
@@ -187,7 +176,7 @@ const flightPlan = (times, origin, destination) => {
 	// With those notes in mind, we can generate a
 	// 	specially weighted graph.
 	// Each flight has a start times and a duration.
-	const airports = createAirports(times)
+	const airports = createAirports(times, origin, destination)
 
 	// replace origin and destination city with
 	// 	their respective Airport instances.
@@ -280,7 +269,6 @@ const flightPlan = (times, origin, destination) => {
 	// the costs map is completely filled!
 	// we can now obtain our destination's minimum cost.
 	const destinationCost = costs.get(destination)
-	console.log(costs)
 
 	// stringify the solution.
 	if (destinationCost === Infinity) {
@@ -290,10 +278,3 @@ const flightPlan = (times, origin, destination) => {
 		return toTimeString(destinationCost)
 	}
 }
-
-times = [["Seattle","Orlando","09:00","20:05"]]
-source = "Seattle"
-dest = "Columbus"
-
-
-flightPlan(times, source, dest)
