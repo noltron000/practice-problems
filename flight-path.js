@@ -103,7 +103,7 @@ const createAirports = (times) => {
 
 	// create airports from flight origins and destinations,
 	// 	and then let the airports "consume" the flights.
-	// we'll return a dictionary of airports by city-name.
+	// we'll return an array of airports by the end.
 	// those airports will contain the flights.
 	const airports = flights.reduce((airports, flight) => {
 
@@ -112,16 +112,23 @@ const createAirports = (times) => {
 		// 	its originating and destination airport.
 		// it will only have a string of the city name.
 
-		// the origin and destination airport city goes through
+		// the origin and destination city goes through
 		// 	the same basic process, making a f(x) a good idea.
 		const getAirport = (city) => {
-			if (city in airports) {
-				return airports[city]
+
+			// if there is any airport with this name, get it.
+			let airport = airports.find((airport) => {
+				return airport['city'] === city
+			})
+
+			// otherwise, create a new one and add it to the list.
+			if (airport === undefined) {
+				airport = new Airport({city})
+				airports.push(airport)
 			}
-			else {
-				airports[city] = new Airport({city})
-				return airports[city]
-			}
+
+			// either way, we're returning the airport object.
+			return airport
 		}
 
 		flight.origin = getAirport(flight.origin)
@@ -135,11 +142,11 @@ const createAirports = (times) => {
 		// we can forget about the flight and
 		// 	just remember the airport for now on.
 		// since the airport that has this flight is already
-		// 	entered into airports, we can return the dictionary.
+		// 	entered into airports, we can return the array.
 		return airports
-	}, { })
+	}, [ ])
 
-	// airports object is complete after the loop.
+	// airports list is complete after the loop.
 	return airports
 }
 
@@ -184,53 +191,109 @@ const flightPlan = (times, origin, destination) => {
 
 	// replace origin and destination city with
 	// 	their respective Airport instances.
-	origin = airports[origin]
-	destination = airports[destination]
+	origin = airports.find((airport) => {
+		return airport.city === origin
+	})
+	destination = airports.find((airport) => {
+		return airport.city === destination
+	})
 
+	// an important concept in the program is "costs".
+	// the "cost" of an airport is how long
+	// 	that it takes to get there from the origin city.
+	// after all, we want to find the minimum "cost"
+	// 	of the destination city, from the origin city.
+
+	// create a costs dictionary.
+	// initialize all cities as not being appealing.
+	// we'll use an infinite cost for unappealing cities.
+	const costs = airports.reduce((costs, airport) => {
+		costs.set(airport, Infinity)
+		return costs
+	}, new Map( ))
+
+	// it literally takes absolutely zero time
+	// 	to get from the origin city to the origin city.
+	// so, set the cost to get there at zero.
+	costs.set(origin, 0)
+
+	// this program will also need an unvisited-list.
+	// every node must be visited, but only in-order!
+	const unvisited = airports.slice( )
+	const sortUnvisited = ( ) => {
+		unvisited.sort((airport01, airport02) => {
+			const cost01 = costs.get(airport01)
+			const cost02 = costs.get(airport02)
+			return cost01 - cost02
+		})
+	}
+
+	// we'll be looping over all the nodes, so we need a
+	// 	visited node tracker, where airports are nodes.
 	while (unvisited.length > 0) {
+
 		// get & visit the minimum-cost airport,
 		// 	which is found at the zeroeth index.
+		sortUnvisited( )
 		const airport =	unvisited.shift( )
 
-		// find neighbors with connecting flights.
+		// filter out the flights that are impossible to take.
 		// if there is a layover, the connecting flight must
 		// 	depart an hour after the last flight's arrival time.
 		const neighbors = airport['flights'].filter((flight) => {
-			let startCost = cost[airport['city']]
+			let initialCost = costs.get(airport)
 
 			// add layover padding
-			if (startCost > 0) {
-				startCost += 60
+			if (initialCost > 0) {
+				initialCost += 60
 			}
 
 			// determine if flight fits schedule
-			if (flight['departure'] >= startCost) {
+			if (flight['departure'] >= initialCost) {
 				return true
 			}
 			else {
 				return false
 			}
-		})
 
-		//
+		// map possible flights over to their destinations,
+		// 	which are also their neighboring airports.
+		// in the meantime, update the "cost" of getting there
+		// 	if the flight in question is "cheaper".
+		}).map((flight) => {
+
+			// get the airport and possible costs.
+			const airport = flight['destination']
+			const newCost = flight['arrival']
+			const oldCost = costs.get(airport)
+
+			// set or reset the cost of getting to this airport.
+			if (oldCost > newCost) {
+				costs.set(airport, newCost)
+			}
+
+			// return the neighbor
+			return airport
+		})
+	}
+
+	// the costs map is completely filled!
+	// we can now obtain our destination's minimum cost.
+	const destinationCost = costs.get(destination)
+	console.log(costs)
+
+	// stringify the solution.
+	if (destinationCost === Infinity) {
+		return "-1"
+	}
+	else {
+		return toTimeString(destinationCost)
 	}
 }
 
-0 -> 134 + 60 (194) -> 200
-let times
-let source
-let dest
+times = [["Seattle","Orlando","09:00","20:05"]]
+source = "Seattle"
+dest = "Columbus"
 
-times = [["Chicago", "Denver","03:00", "06:00"],
-         ["Chicago", "Denver","03:30", "07:00"],
-         ["Chicago", "Los Angeles", "01:00", "05:00"],
-         ["Denver", "Austin", "06:30", "08:30"],
-         ["Denver", "Austin", "07:30", "09:30"],
-         ["Austin", "Denver", "06:30", "08:30"],
-         ["Los Angeles", "Phoenix", "06:00", "07:00"],
-         ["Los Angeles", "Phoenix", "05:30", "06:50"],
-         ["Phoenix", "Austin", "08:00", "08:40"]]
-source = "Chicago"
-dest = "Austin"
 
 flightPlan(times, source, dest)
